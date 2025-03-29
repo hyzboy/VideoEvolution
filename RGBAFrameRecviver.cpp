@@ -6,30 +6,32 @@ extern "C"
     #include<libavutil/pixdesc.h>
 }
 
+namespace
+{
+    void out(const char *str,const FrameFormat &ff)
+    {
+        std::cout<<str<<"_size:   "<<ff.size.width<<"x"<<ff.size.height<<std::endl
+                 <<str<<"_format: "<<av_get_pix_fmt_name(ff.pixel_format)<<std::endl;
+    }
+}//namespace
+
 bool RGBAFrameRecviver::OnFrame(const AVFrame *frame)
 {
-    if(src_format==AV_PIX_FMT_NONE)
+    if(!convert)
     {
-        frame_size.width=frame->width;
-        frame_size.height=frame->height;
+        src_format.pixel_format =AVPixelFormat(frame->format);
+        src_format.size.width   =frame->width;
+        src_format.size.height  =frame->height;
 
-        src_format=AVPixelFormat(frame->format);
+        dst_format.size=ComputeDstFrameSize(src_format.size);
 
-        std::cout<<"size: "<<frame_size.width<<"x"<<frame_size.height<<std::endl
-                 <<"format: "<<av_get_pix_fmt_name(src_format)<<std::endl;
+        out("src",src_format);
+        out("dst",dst_format);
 
-        if(src_format!=AV_PIX_FMT_RGBA)
-            convert=InitFrameConvert(AV_PIX_FMT_RGBA,src_format,frame_size);
+        convert=InitFrameConvert(src_format,dst_format);
     }
 
-    if(src_format==AV_PIX_FMT_RGBA)
-    {
-        return OnFrameRGBA((uint8 *)(frame->data[0]));
-    }
-    else
-    {
-        convert->Convert(frame->data,frame->linesize);
+    convert->Convert(frame->data,frame->linesize);
 
-        return OnFrameRGBA(convert->GetData(0));
-    }
+    return OnFrameRGBA(convert->GetData(0));
 }

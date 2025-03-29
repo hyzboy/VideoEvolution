@@ -6,9 +6,9 @@
 }
 
 #include"VideoEncoder.h"
+#include"libyuv/convert_from_argb.h"
 #include<iostream>
-#include"libyuv.h"
-#include <queue>
+#include<queue>
 
 namespace
 {
@@ -123,13 +123,13 @@ public:
         avformat_free_context(fmt_ctx);
     }
 
-    void Set(const uint w,const uint h,const AVRational &fr) override
+    void Set(const AVRational &fr,const Size2u &s) override
     {
-        VideoEncoder::Set(w,h,fr);
+        VideoEncoder::Set(fr,s);
 
         codec_ctx->bit_rate     =bit_rate;
-        codec_ctx->width        =w;
-        codec_ctx->height       =h;
+        codec_ctx->width        =s.width;
+        codec_ctx->height       =s.height;
         codec_ctx->framerate    =fr;
         codec_ctx->time_base.den=fr.num;
         codec_ctx->time_base.num=fr.den;
@@ -141,8 +141,8 @@ public:
         video_stream=avformat_new_stream(fmt_ctx,codec);
         video_stream->codecpar->codec_id    =fmt_ctx->video_codec_id;
         video_stream->codecpar->codec_type  =AVMEDIA_TYPE_VIDEO;
-        video_stream->codecpar->width       =w;
-        video_stream->codecpar->height      =h;
+        video_stream->codecpar->width       =s.width;
+        video_stream->codecpar->height      =s.height;
         video_stream->codecpar->format      =codec_ctx->pix_fmt;
         video_stream->codecpar->bit_rate    =bit_rate;
         video_stream->time_base             =codec_ctx->time_base;

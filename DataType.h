@@ -44,6 +44,13 @@ using vec2d=vec2<double>;
 template<typename T> struct Size2
 {
     T width,height;
+
+public:
+
+    Size2()
+    {
+        width=height=0;
+    }
 };
 
 using Size2u=Size2<uint>;

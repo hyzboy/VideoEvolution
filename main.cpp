@@ -3,7 +3,6 @@
 #include"VideoDecoder.h"
 #include"FrameRecviver.h"
 #include<stdlib.h>
-#include"libyuv/scale_argb.h"
 
 constexpr uint32_t ALIGN_PIXELS=8;
 
@@ -16,15 +15,11 @@ const uint32_t GetAlignValue(const uint32_t value)
 
 class EvoFrameRecviver:public RGBAFrameRecviver
 {
-    uint8 *new_image=nullptr;
-    uint8 *rgb_image=nullptr;
+    VideoEncoder *rgb_encoder=nullptr;
 
-    bool new_size=false;
+    uint new_height=0;
 
-    uint new_width;
-    uint new_height;
-
-    VideoEncoder *rgb_encoder;
+    bool frame_init=false;
 
 public:
 
@@ -37,63 +32,36 @@ public:
     ~EvoFrameRecviver()
     {
         rgb_encoder->Finish();
+    }
 
-        delete[] rgb_image;
-        delete[] new_image;
+    Size2u ComputeDstFrameSize(const Size2u &src_size) override
+    {
+        Size2u result;
+
+        if(new_height>0)
+        {
+            result.height  =GetAlignValue(new_height);
+
+            const double scale=double(new_height)/double(src_size.height);
+
+            result.width   =GetAlignValue(double(src_size.width)*scale);
+        }
+        else
+        {
+            result.width   =GetAlignValue(src_size.width);
+            result.height  =GetAlignValue(src_size.height);
+        }
+
+        rgb_encoder->Set(frame_rate,result);
+
+        frame_init=rgb_encoder->Init();
+
+        return result;
     }
 
     bool OnFrameRGBA(const uint8 *rgba_data) override
     {
-        if(!rgb_image)
-        {
-            if(new_height>0)
-            {
-                new_height  =GetAlignValue(new_height);
-
-                const double scale=double(new_height)/double(GetHeight());
-
-                new_width   =GetAlignValue(double(GetWidth())*scale);
-
-                new_size=true;
-            }
-            else
-            {
-                new_width   =GetAlignValue(GetWidth());
-                new_height  =GetAlignValue(GetHeight());
-
-                if(new_width!=GetWidth()
-                 ||new_height!=GetHeight())
-                    new_size=true;
-            }
-            
-            std::cout<<"Movie Origin size: "<<GetWidth()<<"x"<<GetHeight()<<std::endl;
-
-            if(new_size)
-            {
-                std::cout<<"Movie Scaled size: "<<new_width<<"x"<<new_height<<std::endl;
-                new_image=new uint8[new_width*new_height*4*2];
-            }
-
-            rgb_image=new uint8[new_width*new_height*4];
-
-            rgb_encoder->Set(new_width,new_height,frame_rate);
-            if(!rgb_encoder->Init())
-                return(false);
-        }
-
-        if(new_size)
-        {
-            libyuv::ARGBScale(  rgba_data,  GetWidth()*4,   GetWidth(), GetHeight(),
-                                rgb_image,  new_width*4,    new_width,  new_height,libyuv::FilterMode::kFilterBox);
-
-            return rgb_encoder->WriteFrame(rgb_image);
-        }
-        else
-        {
-            return rgb_encoder->WriteFrame(rgba_data);
-        }
-
-        //SaveToTGA(filename,(void *)two_image,GetWidth()*2,GetHeight(),24,true);
+        return rgb_encoder->WriteFrame(rgba_data);
     }
 };
 

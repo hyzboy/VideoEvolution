@@ -12,28 +12,37 @@ class FrameRecviver
 {
 protected:
 
-    Size2u frame_size;
+    FrameFormat src_format;
+    FrameFormat dst_format;
 
     AVRational frame_rate;
 
 public:
 
+    FrameRecviver(const AVPixelFormat &dst_pf)
+    {
+        dst_format.pixel_format=dst_pf;
+    }
     virtual ~FrameRecviver()=default;
 
     virtual void SetFrameRate(const AVRational &fr){frame_rate=fr;}
+
     virtual bool OnFrame(const AVFrame *frame)=0;
 
 public:
 
-    const uint GetWidth()const{return frame_size.width;}
-    const uint GetHeight()const{return frame_size.height;}
+    const Size2u &GetSourceFrameSize()const{return src_format.size;}
+    const Size2u &GetTargetFrameSize()const{return dst_format.size;}
+
+    virtual Size2u ComputeDstFrameSize(const Size2u &src_size)
+    {
+        return src_size;    //这样等于不缩放
+    }
 };//
 
 class RGBAFrameRecviver:public FrameRecviver
 {
 private:
-
-    AVPixelFormat src_format=AV_PIX_FMT_NONE;
 
     FrameConvert *convert=nullptr;
     
@@ -43,6 +52,7 @@ private:
 
 public:
 
+    RGBAFrameRecviver():FrameRecviver(AV_PIX_FMT_RGBA){}
     virtual ~RGBAFrameRecviver()
     {
         if(convert)

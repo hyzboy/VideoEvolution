@@ -11,10 +11,32 @@ extern "C"
 typedef uint8_t *FrameData[8];
 typedef int FrameLinesize[8];
 
+struct FrameFormat
+{
+    AVPixelFormat pixel_format;
+    Size2u size;
+
+public:
+
+    FrameFormat()
+    {
+        pixel_format=AV_PIX_FMT_NONE;
+        size.width=size.height=0;
+    }
+
+    FrameFormat(const AVPixelFormat &pf,const Size2u &s)
+    {
+        pixel_format=pf;
+        size=s;
+    }
+};//FrameFormat
+
+void SetFormat(FrameFormat *ff,const AVFrame *);
+
 class FrameConvert
 {
-    AVPixelFormat src_fmt,dst_fmt;
-    Size2u frame_size;
+    FrameFormat src_frame_fmt;
+    FrameFormat dst_frame_fmt;
 
     SwsContext *ctx;
 
@@ -23,9 +45,9 @@ class FrameConvert
 
 private:
 
-    friend FrameConvert *InitFrameConvert(enum AVPixelFormat dst,enum AVPixelFormat src,const Size2u &);
+    friend FrameConvert *InitFrameConvert(const FrameFormat &src,const FrameFormat &dst);
 
-    FrameConvert(SwsContext *sc,enum AVPixelFormat dst,enum AVPixelFormat src,const Size2u &);
+    FrameConvert(SwsContext *sc,const FrameFormat &src,const FrameFormat &dst);
 
 public:
 
@@ -40,4 +62,4 @@ public:
     const int GetLinesize(const int index)const{return dst_linesize[index];}
 };//class FrameConvert
 
-FrameConvert *InitFrameConvert(enum AVPixelFormat dst,enum AVPixelFormat src,const Size2u &src_size);
+FrameConvert *InitFrameConvert(const FrameFormat &src,const FrameFormat &dst);

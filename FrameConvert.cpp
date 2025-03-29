@@ -4,16 +4,19 @@ extern "C"
     #include<libavutil/imgutils.h>
 }
 
-FrameConvert::FrameConvert(SwsContext *sc,enum AVPixelFormat dst,enum AVPixelFormat src,const Size2u &src_size)
+FrameConvert::FrameConvert(SwsContext *sc,const FrameFormat &src,const FrameFormat &dst)
 {
     ctx=sc;
 
-    dst_fmt=dst;
-    src_fmt=src;
+    src_frame_fmt=src;
+    dst_frame_fmt=dst;
 
-    frame_size=src_size;
-
-    av_image_alloc(dst_data,dst_linesize,frame_size.width,frame_size.height,dst,1);
+    av_image_alloc(dst_data,
+                   dst_linesize,
+                   dst_frame_fmt.size.width,
+                   dst_frame_fmt.size.height,
+                   dst_frame_fmt.pixel_format,
+                   1);
 }
 
 FrameConvert::~FrameConvert()
@@ -26,18 +29,18 @@ void FrameConvert::Convert(const FrameData &src_data,const FrameLinesize &src_li
 {
     sws_scale(  ctx,
                 src_data,src_linesize,
-                0,frame_size.height,
+                0,src_frame_fmt.size.height,
                 dst_data,dst_linesize);
 }
 
-FrameConvert *InitFrameConvert(enum AVPixelFormat dst,enum AVPixelFormat src,const Size2u &src_size)
+FrameConvert *InitFrameConvert(const FrameFormat &src,const FrameFormat &dst)
 {
-    SwsContext *sc=sws_getContext(  src_size.width,src_size.height,src,
-                                    src_size.width,src_size.height,dst,
+    SwsContext *sc=sws_getContext(  src.size.width,src.size.height,src.pixel_format,
+                                    dst.size.width,dst.size.height,dst.pixel_format,
                                     SWS_SPLINE,
                                     nullptr,nullptr,nullptr);
 
     if(!sc)return(nullptr);
 
-    return(new FrameConvert(sc,dst,src,src_size));
+    return(new FrameConvert(sc,src,dst));
 }

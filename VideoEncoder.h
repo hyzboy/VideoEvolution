@@ -22,8 +22,7 @@ protected:
     AVFormatContext* fmt_ctx;
     AVCodecContext* codec_ctx;
 
-    uint width;
-    uint height;
+    Size2u frame_size;
     AVRational frame_rate;
     uint bit_rate;
 
@@ -35,26 +34,17 @@ public:
     {
         strcpy_s(filename,_MAX_PATH,fn);
 
-        width=height=0;
         bit_rate=br;
     }
 
-    AVFormatContext* GetFrmCtx()
-    {
-        return fmt_ctx;
-    }
-
-    AVCodecContext* GetCodecCtx() {
-        return codec_ctx
-            ;
-    };
+    AVFormatContext *GetFrmCtx(){return fmt_ctx;}
+    AVCodecContext *GetCodecCtx(){return codec_ctx;}
 
     virtual ~VideoEncoder()=default;
 
-    virtual void Set(const uint w,const uint h,const AVRational &fr)
+    virtual void Set(const AVRational &fr,const Size2u &size)
     {
-        width=w;
-        height=h;
+        frame_size=size;
         frame_rate=fr;
     }
 
