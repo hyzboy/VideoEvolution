@@ -42,13 +42,13 @@ public:
 
     virtual ~VideoEncoder()=default;
 
-    virtual void Set(const AVRational &fr,const Size2u &size)
+    virtual void SetFrameRateSize(const AVRational &fr,const Size2u &size)
     {
         frame_size=size;
         frame_rate=fr;
     }
 
-    virtual bool Init()=0;
+    virtual bool Init(int pass)=0;
 
     virtual bool WriteFrame(const uint8 *rgba_data)=0;
 

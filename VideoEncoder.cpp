@@ -20,25 +20,22 @@ namespace
 
     constexpr EncodecName_by_ID encodec_name_by_id[]=
     {
-        //{AV_CODEC_ID_H264       ,"h264_nvenc"},
-        //{AV_CODEC_ID_H264       ,"nvenc"},
-        //{AV_CODEC_ID_H264       ,"nvenc_h264"},
-        //
+        {AV_CODEC_ID_H264       ,"h264_nvenc"},
+        {AV_CODEC_ID_H264       ,"nvenc"},
+        {AV_CODEC_ID_H264       ,"nvenc_h264"},
+        
 
-        //{AV_CODEC_ID_HEVC       ,"hevc_nvenc"},
-        //{AV_CODEC_ID_HEVC       ,"nvenc_hevc"},
+        {AV_CODEC_ID_HEVC       ,"hevc_nvenc"},
+        {AV_CODEC_ID_HEVC       ,"nvenc_hevc"},
 
-        //{AV_CODEC_ID_H264       ,"h264_amf"},
-        //{AV_CODEC_ID_HEVC       ,"hevc_amf"},
+        {AV_CODEC_ID_H264       ,"h264_amf"},
+        {AV_CODEC_ID_HEVC       ,"hevc_amf"},
 
-        //{AV_CODEC_ID_MJPEG      ,"mjpeg_qsv"},
-        //{AV_CODEC_ID_MPEG2VIDEO ,"mpeg2_qsv"},
-        //{AV_CODEC_ID_H264       ,"h264_qsv"},
-        //{AV_CODEC_ID_HEVC       ,"hevc_qsv"},
-        //{AV_CODEC_ID_VP9        ,"vp9_qsv"},
-
-        {AV_CODEC_ID_HEVC       ,"libx265"},
-        {AV_CODEC_ID_H264       ,"libx264"},
+        {AV_CODEC_ID_MJPEG      ,"mjpeg_qsv"},
+        {AV_CODEC_ID_MPEG2VIDEO ,"mpeg2_qsv"},
+        {AV_CODEC_ID_H264       ,"h264_qsv"},
+        {AV_CODEC_ID_HEVC       ,"hevc_qsv"},
+        {AV_CODEC_ID_VP9        ,"vp9_qsv"},
 
         {AV_CODEC_ID_NONE       ,""}
     };
@@ -75,7 +72,7 @@ namespace
 class FFMPEGVideoEncoder:public VideoEncoder
 {
     const AVCodec *codec;
-    
+
     AVFrame *frame;
 
     AVStream *video_stream=nullptr;
@@ -114,6 +111,8 @@ public:
 
     ~FFMPEGVideoEncoder()
     {
+        Finish();
+
         if(frame)
             av_frame_free(&frame);
 
@@ -123,9 +122,9 @@ public:
         avformat_free_context(fmt_ctx);
     }
 
-    void Set(const AVRational &fr,const Size2u &s) override
+    void SetFrameRateSize(const AVRational &fr,const Size2u &s) override
     {
-        VideoEncoder::Set(fr,s);
+        VideoEncoder::SetFrameRateSize(fr,s);
 
         codec_ctx->bit_rate     =bit_rate;
         codec_ctx->width        =s.width;
@@ -150,15 +149,26 @@ public:
         m_video_stream_index = 0;
     }
 
-    bool Init() override
+    bool Init(int pass) override
     {
         avcodec_parameters_to_context(codec_ctx,video_stream->codecpar);
         
         av_opt_set(codec_ctx->priv_data,"preset","veryslow",0);
         av_opt_set(codec_ctx->priv_data,"crf","10",0);
 
+        if(pass==1)
+        {
+            av_opt_set(codec_ctx->priv_data, "pass", "1", 0);
+            av_opt_set(codec_ctx->priv_data, "stats_file", "ffmpeg2pass-0.log", 0);
+        }
+        else
+        {
+            av_opt_set(codec_ctx->priv_data, "pass", "2", 0);
+            av_opt_set(codec_ctx->priv_data, "stats_file", "ffmpeg2pass-0.log", 0);
+        }
+
         if(fmt_ctx->oformat->flags&AVFMT_GLOBALHEADER)
-            codec_ctx->flags|=AV_CODEC_FLAG_GLOBAL_HEADER;            
+            codec_ctx->flags|=AV_CODEC_FLAG_GLOBAL_HEADER;
 
         if(avcodec_open2(codec_ctx,codec,nullptr)<0)
         {

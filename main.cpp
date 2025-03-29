@@ -21,12 +21,15 @@ class EvoFrameRecviver:public RGBAFrameRecviver
 
     bool frame_init=false;
 
+    int pass;
+
 public:
 
     EvoFrameRecviver(VideoEncoder *rgb,const uint nh)
     {
         rgb_encoder=rgb;
         new_height=nh;
+        pass=0;
     }
 
     ~EvoFrameRecviver()
@@ -52,11 +55,16 @@ public:
             result.height  =GetAlignValue(src_size.height);
         }
 
-        rgb_encoder->Set(frame_rate,result);
+        rgb_encoder->SetFrameRateSize(frame_rate,result);
 
-        frame_init=rgb_encoder->Init();
+        frame_init=rgb_encoder->Init(pass);
 
         return result;
+    }
+
+    void SetPass(int p) override
+    {
+        pass=p;
     }
 
     bool OnFrameRGBA(const uint8 *rgba_data) override
@@ -65,22 +73,27 @@ public:
     }
 };
 
-uint32_t ConvertMovie(const char *src,const char *rgb,const uint32_t new_height,const uint32_t bit_rate,const bool use_hardware)
+uint32_t ConvertMovie(const char *src,const char *rgb,const uint32_t new_height,const uint32_t bit_rate,const int pass,const bool use_hardware)
 {    
-    VideoEncoder *ve_rgb=CreateVideoEncoder(rgb,bit_rate,false);
-    FrameRecviver *fr=new EvoFrameRecviver(ve_rgb,new_height);
-    VideoDecoder *vd=CreateVideoDecoder(src,fr,use_hardware);
-
-    vd->Start();
+    VideoEncoder *video_encoder=CreateVideoEncoder(rgb,bit_rate,false);
+    FrameRecviver *frame_recv=new EvoFrameRecviver(video_encoder,new_height);
+    VideoDecoder *video_decoder=CreateVideoDecoder(src,frame_recv,use_hardware);
 
     uint32_t frame_count=0;
 
-    while(vd->NextFrame())
-        ++frame_count;
+    {
+        frame_recv->SetPass(pass);
+        video_decoder->Start();
 
-    delete vd;
-    delete fr;
-    delete ve_rgb;
+        while(video_decoder->NextFrame())
+            ++frame_count;
+
+        video_encoder->Finish();
+    }
+
+    delete video_decoder;
+    delete frame_recv;
+    delete video_encoder;
 
     return frame_count;
 }
@@ -92,18 +105,23 @@ bool Convert(const char *src,const char *rgb,const uint32_t bit_rate,const uint3
     std::cout<<"         bit_rate: "<<bit_rate<<std::endl;
     std::cout<<"       new height: "<<new_height<<std::endl;
 
-//    return true;
+    uint32_t frame_count;
 
-    uint32_t frame_count=ConvertMovie(src,rgb,new_height,bit_rate,true);
-
-    if(frame_count==0)
+    for(int pass=1;pass<=2;pass++)
     {
-        std::cerr<<"first decoder/encoder failed, try use software decoder/encoder"<<std::endl;
+        std::cout<<"pass "<<pass<<std::endl;
 
-        frame_count=ConvertMovie(src,rgb,new_height,bit_rate,false);
-    }
+        frame_count=ConvertMovie(src,rgb,new_height,bit_rate,pass,true);
+
+        if(frame_count==0)
+        {
+            std::cerr<<"first decoder/encoder failed, try use software decoder/encoder"<<std::endl;
+
+            frame_count=ConvertMovie(src,rgb,new_height,bit_rate,pass,false);
+        }
         
-    std::cout<<std::endl;
+        std::cout<<std::endl;
+    }
 
     if(frame_count>0)
     {
