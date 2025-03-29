@@ -41,6 +41,13 @@ public:
 using vec2i=vec2<int>;
 using vec2d=vec2<double>;
 
+template<typename T> struct Size2
+{
+    T width,height;
+};
+
+using Size2u=Size2<uint>;
+
 #define SAFE_CLEAR(obj)     if(obj)delete obj;
 
 template<typename T> class SafeObject

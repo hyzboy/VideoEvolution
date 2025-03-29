@@ -1,5 +1,7 @@
 #pragma once
 
+#include"DataType.h"
+
 extern "C"
 {
     #include<libavutil/pixfmt.h>
@@ -12,7 +14,7 @@ typedef int FrameLinesize[8];
 class FrameConvert
 {
     AVPixelFormat src_fmt,dst_fmt;
-    uint32_t width,height;
+    Size2u frame_size;
 
     SwsContext *ctx;
 
@@ -21,9 +23,9 @@ class FrameConvert
 
 private:
 
-    friend FrameConvert *InitFrameConvert(enum AVPixelFormat dst,enum AVPixelFormat src,const uint32_t w,const uint32_t h);
+    friend FrameConvert *InitFrameConvert(enum AVPixelFormat dst,enum AVPixelFormat src,const Size2u &);
 
-    FrameConvert(SwsContext *sc,enum AVPixelFormat dst,enum AVPixelFormat src,const uint32_t w,const uint32_t h);
+    FrameConvert(SwsContext *sc,enum AVPixelFormat dst,enum AVPixelFormat src,const Size2u &);
 
 public:
 
@@ -38,4 +40,4 @@ public:
     const int GetLinesize(const int index)const{return dst_linesize[index];}
 };//class FrameConvert
 
-FrameConvert *InitFrameConvert(enum AVPixelFormat dst,enum AVPixelFormat src,const uint32_t w,const uint32_t h);
+FrameConvert *InitFrameConvert(enum AVPixelFormat dst,enum AVPixelFormat src,const Size2u &src_size);

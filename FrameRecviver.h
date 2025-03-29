@@ -12,8 +12,7 @@ class FrameRecviver
 {
 protected:
 
-    uint width=0;
-    uint height=0;
+    Size2u frame_size;
 
     AVRational frame_rate;
 
@@ -26,8 +25,8 @@ public:
 
 public:
 
-    const uint GetWidth()const{return width;}
-    const uint GetHeight()const{return height;}
+    const uint GetWidth()const{return frame_size.width;}
+    const uint GetHeight()const{return frame_size.height;}
 };//
 
 class RGBAFrameRecviver:public FrameRecviver

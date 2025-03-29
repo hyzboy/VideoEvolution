@@ -10,16 +10,16 @@ bool RGBAFrameRecviver::OnFrame(const AVFrame *frame)
 {
     if(src_format==AV_PIX_FMT_NONE)
     {
-        width=frame->width;
-        height=frame->height;
+        frame_size.width=frame->width;
+        frame_size.height=frame->height;
 
         src_format=AVPixelFormat(frame->format);
 
-        std::cout<<"size: "<<width<<"x"<<height<<std::endl
+        std::cout<<"size: "<<frame_size.width<<"x"<<frame_size.height<<std::endl
                  <<"format: "<<av_get_pix_fmt_name(src_format)<<std::endl;
 
         if(src_format!=AV_PIX_FMT_RGBA)
-            convert=InitFrameConvert(AV_PIX_FMT_RGBA,src_format,width,height);
+            convert=InitFrameConvert(AV_PIX_FMT_RGBA,src_format,frame_size);
     }
 
     if(src_format==AV_PIX_FMT_RGBA)

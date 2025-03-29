@@ -20,22 +20,25 @@ namespace
 
     constexpr EncodecName_by_ID encodec_name_by_id[]=
     {
-        {AV_CODEC_ID_H264       ,"h264_nvenc"},
-        {AV_CODEC_ID_H264       ,"nvenc"},
-        {AV_CODEC_ID_H264       ,"nvenc_h264"},
-        
+        //{AV_CODEC_ID_H264       ,"h264_nvenc"},
+        //{AV_CODEC_ID_H264       ,"nvenc"},
+        //{AV_CODEC_ID_H264       ,"nvenc_h264"},
+        //
 
-        {AV_CODEC_ID_HEVC       ,"hevc_nvenc"},
-        {AV_CODEC_ID_HEVC       ,"nvenc_hevc"},
+        //{AV_CODEC_ID_HEVC       ,"hevc_nvenc"},
+        //{AV_CODEC_ID_HEVC       ,"nvenc_hevc"},
 
-        {AV_CODEC_ID_H264       ,"h264_amf"},
-        {AV_CODEC_ID_HEVC       ,"hevc_amf"},
+        //{AV_CODEC_ID_H264       ,"h264_amf"},
+        //{AV_CODEC_ID_HEVC       ,"hevc_amf"},
 
-        {AV_CODEC_ID_MJPEG      ,"mjpeg_qsv"},
-        {AV_CODEC_ID_MPEG2VIDEO ,"mpeg2_qsv"},
-        {AV_CODEC_ID_H264       ,"h264_qsv"},
-        {AV_CODEC_ID_HEVC       ,"hevc_qsv"},
-        {AV_CODEC_ID_VP9        ,"vp9_qsv"},
+        //{AV_CODEC_ID_MJPEG      ,"mjpeg_qsv"},
+        //{AV_CODEC_ID_MPEG2VIDEO ,"mpeg2_qsv"},
+        //{AV_CODEC_ID_H264       ,"h264_qsv"},
+        //{AV_CODEC_ID_HEVC       ,"hevc_qsv"},
+        //{AV_CODEC_ID_VP9        ,"vp9_qsv"},
+
+        {AV_CODEC_ID_HEVC       ,"libx265"},
+        {AV_CODEC_ID_H264       ,"libx264"},
 
         {AV_CODEC_ID_NONE       ,""}
     };
@@ -44,21 +47,25 @@ namespace
     {
         //if(hardware)
         //{
-        //    const AVCodec *codec=nullptr;
+            const AVCodec *codec=nullptr;
 
-        //    for(auto &c:encodec_name_by_id)
-        //    {
-        //        if(c.id==id)
-        //        {
-        //            codec=avcodec_find_encoder_by_name(c.name);
+            for(auto &c:encodec_name_by_id)
+            {
+                if(c.id==id)
+                {
+                    codec=avcodec_find_encoder_by_name(c.name);
 
-        //            if(codec)
-        //            {
-        //                std::cout<<"use encoder: "<<c.name<<std::endl;
-        //                return codec;
-        //            }
-        //        }
-        //    }
+                    if(codec)
+                    {
+                        std::cout<<"use encoder: "<<c.name<<std::endl;
+                        return codec;
+                    }
+                    else
+                    {
+                        std::cerr<<"don't support encoder: "<<c.name<<std::endl;
+                    }
+                }
+            }
         //}
 
         return avcodec_find_encoder(id);
@@ -126,8 +133,8 @@ public:
         codec_ctx->framerate    =fr;
         codec_ctx->time_base.den=fr.num;
         codec_ctx->time_base.num=fr.den;
-        codec_ctx->gop_size     =12;
-        codec_ctx->max_b_frames =2;
+        codec_ctx->gop_size     =25;
+        codec_ctx->max_b_frames =3;
         codec_ctx->pix_fmt      =AV_PIX_FMT_NV12;
         codec_ctx->codec_type   =AVMEDIA_TYPE_VIDEO;
 
@@ -147,7 +154,8 @@ public:
     {
         avcodec_parameters_to_context(codec_ctx,video_stream->codecpar);
         
-        av_opt_set(codec_ctx->priv_data,"preset","slow",0);
+        av_opt_set(codec_ctx->priv_data,"preset","veryslow",0);
+        av_opt_set(codec_ctx->priv_data,"crf","10",0);
 
         if(fmt_ctx->oformat->flags&AVFMT_GLOBALHEADER)
             codec_ctx->flags|=AV_CODEC_FLAG_GLOBAL_HEADER;            
@@ -274,8 +282,8 @@ VideoEncoder *CreateVideoEncoder(const char *filename,const uint bit_rate,const 
 {
     constexpr AVCodecID codec_list[]
     {
-        AV_CODEC_ID_HEVC,
         AV_CODEC_ID_H264,
+        AV_CODEC_ID_HEVC,
         AV_CODEC_ID_VP9,
         AV_CODEC_ID_AV1
     };
@@ -284,7 +292,7 @@ VideoEncoder *CreateVideoEncoder(const char *filename,const uint bit_rate,const 
     
     for(AVCodecID id:codec_list)
     {
-        codec=GetAVEncodec(AV_CODEC_ID_H264,use_hardware);
+        codec=GetAVEncodec(id,use_hardware);
         if(codec)break;
     }
 
