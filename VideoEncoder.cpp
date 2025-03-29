@@ -71,9 +71,13 @@ namespace
 
 class FFMPEGVideoEncoder:public VideoEncoder
 {
+    AVFormatContext* fmt_ctx;
+    AVCodecContext* codec_ctx;
+
     const AVCodec *codec;
 
     AVFrame *frame;
+    uint bit_rate;
 
     AVStream *video_stream=nullptr;
     uint pts;
@@ -89,9 +93,11 @@ class FFMPEGVideoEncoder:public VideoEncoder
 
 public:
 
-    FFMPEGVideoEncoder(const char *fn,const AVCodec *eco,const uint br):VideoEncoder(fn,br)
+    FFMPEGVideoEncoder(const char *fn,const AVCodec *eco,const uint br):VideoEncoder(fn)
     {
         codec=eco;
+
+        bit_rate=br;
 
         frame=av_frame_alloc();
         codec_ctx=avcodec_alloc_context3(codec);

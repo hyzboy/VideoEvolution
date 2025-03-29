@@ -25,7 +25,7 @@ public:
     }
     virtual ~FrameRecviver()=default;
 
-    virtual void SetFrameRate(const AVRational &fr){frame_rate=fr;}
+    virtual void OnFrameRate(const AVRational &fr){frame_rate=fr;}
 
     virtual bool OnFrame(const AVFrame *frame)=0;
 
@@ -47,7 +47,7 @@ class RGBAFrameRecviver:public FrameRecviver
 private:
 
     FrameConvert *convert=nullptr;
-    
+
 private:
 
     bool OnFrame(const AVFrame *frame);

@@ -169,7 +169,7 @@ public:
 
         frame=av_frame_alloc();
 
-        frame_recviver->SetFrameRate(video_stream->avg_frame_rate);
+        frame_recviver->OnFrameRate(video_stream->avg_frame_rate);
 
         return(true);
     }

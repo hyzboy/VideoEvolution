@@ -19,33 +19,24 @@ class VideoEncoder
 {
 protected:
 
-    AVFormatContext* fmt_ctx;
-    AVCodecContext* codec_ctx;
-
-    Size2u frame_size;
     AVRational frame_rate;
-    uint bit_rate;
+    Size2u frame_size;
 
     char filename[_MAX_PATH];
 
 public:
 
-    VideoEncoder(const char *fn,const uint br)
+    VideoEncoder(const char *fn)
     {
         strcpy_s(filename,_MAX_PATH,fn);
-
-        bit_rate=br;
     }
-
-    AVFormatContext *GetFrmCtx(){return fmt_ctx;}
-    AVCodecContext *GetCodecCtx(){return codec_ctx;}
 
     virtual ~VideoEncoder()=default;
 
     virtual void SetFrameRateSize(const AVRational &fr,const Size2u &size)
     {
-        frame_size=size;
         frame_rate=fr;
+        frame_size=size;
     }
 
     virtual bool Init(int pass)=0;
