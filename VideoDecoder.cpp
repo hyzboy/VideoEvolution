@@ -129,7 +129,7 @@ public:
         video_stream=nullptr;
         video_stream_index=-1;
 
-        for(int i=0;i<ctx->nb_streams;i++)
+        for(uint i=0;i<ctx->nb_streams;i++)
         {
             if(ctx->streams[i]->codecpar->codec_type==AVMEDIA_TYPE_VIDEO)
             {

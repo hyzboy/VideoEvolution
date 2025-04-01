@@ -39,7 +39,7 @@ public:
         frame_size=size;
     }
 
-    virtual bool Init(int pass)=0;
+    virtual bool Init()=0;
 
     virtual bool WriteFrame(const uint8 *rgba_data)=0;
 

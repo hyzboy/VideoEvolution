@@ -155,23 +155,12 @@ public:
         m_video_stream_index = 0;
     }
 
-    bool Init(int pass) override
+    bool Init() override
     {
         avcodec_parameters_to_context(codec_ctx,video_stream->codecpar);
         
         av_opt_set(codec_ctx->priv_data,"preset","veryslow",0);
         av_opt_set(codec_ctx->priv_data,"crf","10",0);
-
-        if(pass==1)
-        {
-            av_opt_set(codec_ctx->priv_data, "pass", "1", 0);
-            av_opt_set(codec_ctx->priv_data, "stats_file", "ffmpeg2pass-0.log", 0);
-        }
-        else
-        {
-            av_opt_set(codec_ctx->priv_data, "pass", "2", 0);
-            av_opt_set(codec_ctx->priv_data, "stats_file", "ffmpeg2pass-0.log", 0);
-        }
 
         if(fmt_ctx->oformat->flags&AVFMT_GLOBALHEADER)
             codec_ctx->flags|=AV_CODEC_FLAG_GLOBAL_HEADER;

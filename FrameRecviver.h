@@ -34,8 +34,6 @@ public:
     const Size2u &GetSourceFrameSize()const{return src_format.size;}
     const Size2u &GetTargetFrameSize()const{return dst_format.size;}
 
-    virtual void SetPass(int)=0;
-
     virtual Size2u ComputeDstFrameSize(const Size2u &src_size)
     {
         return src_size;    //这样等于不缩放

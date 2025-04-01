@@ -4,6 +4,9 @@ PROJECT(VideoEvolution)
 
 find_package(libyuv CONFIG REQUIRED)
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/RadeonImageFilter/include)
+link_directories(${CMAKE_CURRENT_SOURCE_DIR}/RadeonImageFilter/Windows/Dynamic-MT)
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include)
 
 SET(VIDEO_SOURCE    VideoDecoder.cpp
@@ -24,8 +27,11 @@ SOURCE_GROUP("Audio" FILES ${AUDIO_SOURCE})
 SOURCE_GROUP("Video" FILES ${VIDEO_SOURCE})
 SOURCE_GROUP("Image" FILES ${IMAGE_SOURCE})
 
+add_compile_options("/MP")
+
 add_executable(VideoEvolution  main.cpp
                                 DataType.h
+                                RIFSupport.cpp
                                 #${AUDIO_SOURCE}
                                 ${VIDEO_SOURCE} ${IMAGE_SOURCE})
 
@@ -39,4 +45,5 @@ target_link_libraries(VideoEvolution PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/lib/swresample.lib
     ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/lib/swscale.lib
     yuv
+    RadeonImageFilters
 )
